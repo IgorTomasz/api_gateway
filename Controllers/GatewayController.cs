@@ -15,10 +15,48 @@ namespace api_gateway.Controllers
 		}
 
 		[HttpPost("user/register")]
-		public async Task<IActionResult> RegisterUser(RegisterRequest request)
+		public async Task<IActionResult> RegisterUser(UserRegisterRequest registerRequest)
 		{
-			var user = await _gatewayService.RegisterUser("account/User/auth/register", request);
+			var user = await _gatewayService.RegisterUser("account/User/auth/register", registerRequest);
 			return Created("",user);
+		}
+
+		[HttpPost("user/login")]
+		public async Task<IActionResult> LoginUser(UserLoginRequest loginRequest)
+		{
+			var isLogged = await _gatewayService.LoginUser("account/User/auth/login", loginRequest);
+
+			if (!isLogged.Success && isLogged.UserId==Guid.Empty)
+			{
+				return BadRequest(isLogged.Error);
+			}
+
+			UserProfileResponse user = await _gatewayService.GetUserProfile("account/User/profile",isLogged.UserId);
+
+			UserTokensResponse tokens = _gatewayService.GenerateJwtTokens(user);
+
+			UserCreateSessionRequest sessionRequest = new UserCreateSessionRequest
+			{
+				UserId = isLogged.UserId,
+				DeviceInfo = Request.Headers["User-Agent"].ToString(),
+				IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+				RefToken = tokens.refToken				
+			};
+
+			Guid sessionId = await _gatewayService.CreateUserSession("account/UserSession/auth/session/create", sessionRequest);
+
+			return Created("", new
+			{
+				SessionId = sessionId,
+				Token = tokens.jwtToken,
+				RefToken = tokens.refToken
+			});
+		}
+
+		[HttpGet("adm/users")]
+		public async Task<IActionResult> GetAllUsers()
+		{
+			return Ok(await _gatewayService.GetAllUsers("account/User/adm/users"));
 		}
 	}
 }

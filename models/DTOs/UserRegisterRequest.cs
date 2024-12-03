@@ -2,7 +2,7 @@
 
 namespace api_gateway.models.DTOs
 {
-	public class RegisterRequest
+	public class UserRegisterRequest
 	{
 		[Required]
 		public string username { get; set; }

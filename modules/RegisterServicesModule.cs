@@ -10,10 +10,16 @@ namespace api_gateway.modules
 			services.AddHttpClient<IPaymentService, PaymentService>(c =>
 			{
 				c.BaseAddress = new Uri(configuration["Services:PaymentService"]);
+			}).ConfigureHttpClient((provider, c) =>
+			{
+				c.DefaultRequestHeaders.Add("X-Int-Secret", configuration["ApiKey:Secret"]);
 			});
 			services.AddHttpClient<IAccountService, AccountService>(c =>
 			{
 				c.BaseAddress = new Uri(configuration["Services:AccountService"]);
+			}).ConfigureHttpClient((provider, c) =>
+			{
+				c.DefaultRequestHeaders.Add("X-Int-Secret", configuration["ApiKey:Secret"]);
 			});
 
 			return services;
