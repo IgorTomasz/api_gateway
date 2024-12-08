@@ -11,5 +11,12 @@
 		public bool isActive { get; set; }
 		public DateTime createdAt { get; set; }
 		public DateTime? lastLogin { get; set; }
+		public UserType userType { get; set; }
+	}
+
+
+	public enum UserType
+	{
+		Client, Admin
 	}
 }

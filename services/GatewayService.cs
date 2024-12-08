@@ -15,7 +15,9 @@ namespace api_gateway.services
 		public Task<UserProfileResponse> GetUserProfile(string endpoint, Guid userId);
 		public UserTokensResponse GenerateJwtTokens(UserProfileResponse user);
 		public Task<List<UserProfileResponse>> GetAllUsers(string endpoint);
-	}
+		public Task<UserInfoResponse> GetUserInfo(string endpoint, Guid sessionId);
+
+    }
 	public class GatewayService : IGatewayService
 	{
 		private readonly IPaymentService _paymentService;
@@ -54,6 +56,11 @@ namespace api_gateway.services
 			return await _accountService.GetAllUsers(endpoint);
 		}
 
+		public async Task<UserInfoResponse> GetUserInfo(string endpoint, Guid sessionId)
+		{
+			return await _accountService.GetUserProfile(endpoint, sessionId);
+		}
+
 		public UserTokensResponse GenerateJwtTokens(UserProfileResponse user)
 		{
 			var jwtToken = GenerateJwt(user);
@@ -68,13 +75,20 @@ namespace api_gateway.services
 
 		private string GenerateJwt(UserProfileResponse user)
 		{
+
+			var userType = "";
+			switch (user.userType)
+			{
+				case UserType.Admin: userType="Admin"; break;
+				case UserType.Client: userType="Client"; break;
+			}
 			var jwtKey = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
 
 			var policy = new[]
 			{
 				new Claim(ClaimTypes.NameIdentifier, user.userId.ToString()),
 				new Claim(ClaimTypes.Name, user.username),
-				new Claim(ClaimTypes.Role, "Client")
+				new Claim(ClaimTypes.Role, userType)
 			};
 
 			var token = new JwtSecurityToken(
