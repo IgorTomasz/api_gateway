@@ -16,9 +16,16 @@ namespace api_gateway
             // Add services to the container.
 
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddScoped<IPaymentService, PaymentService>();
+			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+			builder.Services.AddScoped<ILogService, LogService>();
+			builder.Services.AddScoped<IPaymentService, PaymentService>();
             builder.Services.AddScoped<IAccountService, AccountService>();
+            builder.Services.AddLogging(con =>
+            {
+                con.AddConsole();
+                con.AddDebug();
+            });
+            
             builder.Services.AddScoped<IGatewayService, GatewayService>();
             builder.Services.RegisterServices(builder.Configuration);
 			builder.Services.AddEndpointsApiExplorer();

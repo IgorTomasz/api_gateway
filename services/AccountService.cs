@@ -1,11 +1,12 @@
-﻿using api_gateway.models.DTOs;
+﻿using api_gateway.models;
+using api_gateway.models.DTOs;
 using System.Text.Json;
 
 namespace api_gateway.services
 {
 	public interface IAccountService
 	{
-		public Task<UserCreatedResponse> RegisterUser(string endpoint, UserRegisterRequest request);
+		public Task<HttpResponseModel> RegisterUser(string endpoint, UserRegisterRequest request);
 		public Task<UserLoginResponse> LoginUser(string endpoint, UserLoginRequest request);
 		public Task<Guid> CreateUserSession(string endpoint, UserCreateSessionRequest request);
 		public Task<UserProfileResponse> GetUserProfile(string endpoint, Guid userId);
@@ -21,30 +22,33 @@ namespace api_gateway.services
 
 		private readonly HttpClient _httpClient;
 		private readonly JsonSerializerOptions _options;
+		private readonly ILogService _logger;
 
-		public AccountService(HttpClient httpClient)
+		public AccountService(HttpClient httpClient, ILogService logService)
 		{
 			_httpClient = httpClient;
 			_options = new JsonSerializerOptions
 			{
 				PropertyNameCaseInsensitive = true,
 			};
+			_logger = logService;
 		}
 
 		public async Task<List<UserProfileResponse>> GetAllUsers(string endpoint)
 		{
+			_logger.Log(endpoint, _httpClient.BaseAddress);
 			var resp = await _httpClient.GetAsync(endpoint);
 			resp.EnsureSuccessStatusCode();
 			var content = await resp.Content.ReadAsStringAsync();
 			return JsonSerializer.Deserialize<List<UserProfileResponse>>(content, _options);
 		}
 
-		public async Task<UserCreatedResponse> RegisterUser (string endpoint, UserRegisterRequest request)
+		public async Task<HttpResponseModel> RegisterUser (string endpoint, UserRegisterRequest request)
 		{
 			var resp = await _httpClient.PostAsJsonAsync(endpoint, request);
 			resp.EnsureSuccessStatusCode();
 			var content = await resp.Content.ReadAsStringAsync();
-			return JsonSerializer.Deserialize<UserCreatedResponse>(content, _options);
+			return JsonSerializer.Deserialize<HttpResponseModel>(content, _options);
 		}
 
 		public async Task<UserLoginResponse> LoginUser(string endpoint, UserLoginRequest request)

@@ -1,8 +1,12 @@
-﻿using api_gateway.models.DTOs;
+﻿using api_gateway.models;
+using api_gateway.models.DTOs;
+using api_gateway.models.PaymentDTOs;
 using api_gateway.services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Net;
+using System.Text.Json;
 
 namespace api_gateway.Controllers
 {
@@ -19,8 +23,21 @@ namespace api_gateway.Controllers
 		[HttpPost("user/register")]
 		public async Task<IActionResult> RegisterUser(UserRegisterRequest registerRequest)
 		{
-			var user = await _gatewayService.RegisterUser("account/User/auth/register", registerRequest);
-			return Created("",user);
+			HttpResponseModel resp = await _gatewayService.RegisterUser("account/User/auth/register", registerRequest);
+			if (!resp.Success)
+			{
+				return BadRequest(new HttpResponseModel
+				{
+					Success = false,
+					Error = resp.Error
+				});
+			}
+			Guid userId = Guid.Parse(resp.Message.ToString());
+			await _gatewayService.CreateAccount("payment/Payment/account/create", new CreateAccountRequestMicroservice { UserId = userId });
+			return Created("", new HttpResponseModel
+			{
+				Success = true
+			});
 		}
 
 		[HttpPost("user/login")]
@@ -30,7 +47,11 @@ namespace api_gateway.Controllers
 
 			if (!isLogged.Success && isLogged.UserId==Guid.Empty)
 			{
-				return BadRequest(isLogged.Error);
+				return BadRequest(new HttpResponseModel
+				{
+					Success = false,
+					Error = isLogged.Error
+				});
 			}
 
 			UserProfileResponse user = await _gatewayService.GetUserProfile("account/User/profile",isLogged.UserId);
@@ -166,6 +187,128 @@ namespace api_gateway.Controllers
 				Success = false,
 				Error = "There is no matching refresh token"
 			});
+
+		}
+
+		//[Authorize]
+		[HttpPost("payments/handle-deposit")]
+		public async Task<IActionResult> HandleDeposit(HandlePaymentRequest request)
+		{
+			UserInfoResponse userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", request.SessionId);
+
+			if (!userInfo.Success)
+			{
+				return BadRequest(new HttpResponseModel
+				{
+					Success = false,
+					Error = "There is no user connected to that session"
+				});
+			}
+
+			if (request.PaymentMethod == null)
+			{
+				return BadRequest(new HttpResponseModel
+				{
+					Success = false,
+					Error = "There is no defined payment method"
+				});
+			}
+		
+
+			HandlePaymentRequestMicroservice handlePaymentRequest = new HandlePaymentRequestMicroservice
+			{
+				UserId = userInfo.UserId,
+				Amount = request.Amount,
+				MetaData = new Dictionary<string, object>
+				{
+					{"PaymentMethod", request.PaymentMethod},
+					{"TransactionType", "Deposit" }
+				}
+			};
+
+			if (request.MetaData != null)
+			{
+				foreach (var item in request.MetaData)
+				{
+					handlePaymentRequest.MetaData.Add(item.Key, item.Value);
+				}
+			}
+
+			HttpResponseModel resp = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", handlePaymentRequest);
+
+			if (!resp.Success)
+			{
+				return Conflict(new HttpResponseModel
+				{
+					Success = false,
+					Error = resp.Error
+				});
+			}
+
+			return Created("", new HttpResponseModel
+			{
+				Success = true,
+				Message = resp
+			});
+
+		}
+
+		//[Authorize]
+		[HttpPost("payments/handle-withdraw")]
+		public async Task<IActionResult> HandleWithdraw(HandlePaymentRequest request)
+		{
+			UserInfoResponse userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", request.SessionId);
+
+			if (!userInfo.Success)
+			{
+				return BadRequest(new HttpResponseModel
+				{
+					Success = false,
+					Error = "There is no user connected to that session"
+				});
+			}
+
+			if (request.PaymentMethod == null)
+			{
+				return BadRequest(new HttpResponseModel
+				{
+					Success = false,
+					Error = "There is no defined payment method"
+				});
+			}
+
+
+			HandlePaymentRequestMicroservice handlePaymentRequest = new HandlePaymentRequestMicroservice
+			{
+				UserId = userInfo.UserId,
+				Amount = request.Amount,
+				MetaData = new Dictionary<string, object>
+				{
+					{"PaymentMethod", request.PaymentMethod},
+					{"TransactionType", "Withdraw" }
+				}
+			};
+
+			if(request.MetaData != null)
+			{
+				foreach (var item in request.MetaData)
+				{
+					handlePaymentRequest.MetaData.Add(item.Key, item.Value);
+				}
+			}
+
+			HttpResponseModel resp = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", handlePaymentRequest);
+
+			if (!resp.Success)
+			{
+				return Conflict(new HttpResponseModel
+				{
+					Success = false,
+					Error = resp.Error
+				});
+			}
+
+			return Created("", resp);
 
 		}
 

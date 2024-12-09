@@ -1,4 +1,6 @@
-﻿using api_gateway.models.DTOs;
+﻿using api_gateway.models;
+using api_gateway.models.DTOs;
+using api_gateway.models.PaymentDTOs;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -9,7 +11,7 @@ namespace api_gateway.services
 {
 	public interface IGatewayService
 	{
-		public Task<UserCreatedResponse> RegisterUser(string endpoint, UserRegisterRequest request);
+		public Task<HttpResponseModel> RegisterUser(string endpoint, UserRegisterRequest request);
 		public Task<UserLoginResponse> LoginUser(string endpoint, UserLoginRequest request);
 		public Task<Guid> CreateUserSession(string endpoint, UserCreateSessionRequest request);
 		public Task<UserProfileResponse> GetUserProfile(string endpoint, Guid userId);
@@ -17,8 +19,9 @@ namespace api_gateway.services
 		public Task<List<UserProfileResponse>> GetAllUsers(string endpoint);
 		public Task<UserInfoResponse> GetUserInfo(string endpoint, Guid sessionId);
 		public Task<HttpResponseModel> ChangeUserPassword(string endpoint, ChangeUserPasswordUserMicroservice request);
-
 		public Task<HttpResponseModel> GetUserRefToken(string endpoint, UserRefreshTokenRequestMicroservice request);
+		public Task<HttpResponseModel> CreateAccount(string endpoint, CreateAccountRequestMicroservice request);
+		public Task<HttpResponseModel> HandlePayment(string endpoint, HandlePaymentRequestMicroservice request);
 	}
 	public class GatewayService : IGatewayService
 	{
@@ -33,7 +36,17 @@ namespace api_gateway.services
 			_configuration = configuration;
 		}
 
-		public async Task<UserCreatedResponse> RegisterUser(string endpoint, UserRegisterRequest request)
+		public async Task<HttpResponseModel> CreateAccount(string endpoint, CreateAccountRequestMicroservice request)
+		{
+			return await _paymentService.CreateAccount(endpoint, request);
+		}
+
+		public async Task<HttpResponseModel> HandlePayment(string endpoint, HandlePaymentRequestMicroservice request)
+		{
+			return await _paymentService.HandlePayment(endpoint, request);
+		}
+
+		public async Task<HttpResponseModel> RegisterUser(string endpoint, UserRegisterRequest request)
 		{
 			return await _accountService.RegisterUser(endpoint, request);
 		}
