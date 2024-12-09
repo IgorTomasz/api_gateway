@@ -2,6 +2,7 @@
 using api_gateway.services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace api_gateway.Controllers
 {
@@ -54,21 +55,121 @@ namespace api_gateway.Controllers
 			});
 		}
 
-		[Authorize]
-		[HttpPost("account/User/profile/update-password")]
+		//[Authorize]
+		[HttpPost("profile/update-password")]
 		public async Task<IActionResult> UpdateUserPassword(ChangeUserPasswordRequest passwordRequest)
 		{
 			UserInfoResponse userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", passwordRequest.SessionId);
 
 			if (!userInfo.Success)
 			{
+				return BadRequest(new HttpResponseModel
+				{
+					Success = false,
+					Error = "There is no user connected to that session"
+				});
+			}
+
+			HttpResponseModel responseModel = await _gatewayService.ChangeUserPassword("account/User/profile/update-password", new ChangeUserPasswordUserMicroservice { userId = userInfo.UserId, newPassword = passwordRequest.Password });
+
+			if (!responseModel.Success)
+			{
+				return Conflict(new HttpResponseModel
+				{
+					Success = false,
+					Error = "Something went wrong while changing user password"
+				});
+			}
+
+			return Ok(responseModel);
+		} 
+
+		//[Authorize]
+		[HttpGet("profile/{sessionId}")]
+		public async Task<IActionResult> GetUserProfile(Guid sessionId)
+		{
+			UserInfoResponse userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", sessionId);
+
+			if (!userInfo.Success)
+			{
+				return BadRequest(new HttpResponseModel
+				{
+					Success = false,
+					Error = "There is no user connected to that session"
+				});
+			}
+
+			UserProfileResponse user = await _gatewayService.GetUserProfile("account/User/profile", userInfo.UserId);
+
+			return Ok(user);
+
+		}
+
+		[HttpPost("profile/refresh")]
+		public async Task<IActionResult> GetNewToken(UserRefreshTokenRequest refRequest)
+		{
+			UserInfoResponse userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", refRequest.SessionId);
+
+			if (!userInfo.Success)
+			{
+				return BadRequest(new HttpResponseModel
+				{
+					Success = false,
+					Error = "There is no user connected to that session"
+				});
+			}
+
+			UserRefreshTokenRequestMicroservice request = new UserRefreshTokenRequestMicroservice
+			{
+				SessionId = refRequest.SessionId,
+				UserId = userInfo.UserId
+			};
+
+			HttpResponseModel resp = await _gatewayService.GetUserRefToken("account/UserSession/auth/refresh-token", request);
+
+			if (!resp.Success)
+			{
+				return BadRequest(new HttpResponseModel
+				{
+					Success = false,
+					Error = resp.Error
+				});
+			}
+
+			UserProfileResponse user = await _gatewayService.GetUserProfile("account/User/profile", userInfo.UserId);
+
+			if (resp.Message.Equals(refRequest.RefToken))
+			{
+				UserTokensResponse tokens = _gatewayService.GenerateJwtTokens(user);
+
+				UserCreateSessionRequest sessionRequest = new UserCreateSessionRequest
+				{
+					UserId = user.userId,
+					DeviceInfo = Request.Headers["User-Agent"].ToString(),
+					IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+					RefToken = tokens.refToken
+				};
+
+				Guid sessionId = await _gatewayService.CreateUserSession("account/UserSession/auth/session/create", sessionRequest);
+
+				return Created("", new
+				{
+					SessionId = sessionId,
+					Token = tokens.jwtToken,
+					RefToken = tokens.refToken
+				});
 
 			}
 
+			return BadRequest(new HttpResponseModel
+			{
+				Success = false,
+				Error = "There is no matching refresh token"
+			});
 
-		} 
+		}
 
-		[Authorize(Roles = "Admin")]
+		//[Authorize(Roles = "Admin")]
 		[HttpGet("adm/users")]
 		public async Task<IActionResult> GetAllUsers()
 		{

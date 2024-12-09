@@ -15,7 +15,6 @@ namespace api_gateway.services
 		public PaymentService(HttpClient httpClient, IConfiguration configuration)
 		{
 			_httpClient = httpClient;
-			_headers.Add("X-Int-Secret", configuration["ExtraHeaders:X-Int-Secret"]);
 			_options = new JsonSerializerOptions
 			{
 				PropertyNameCaseInsensitive = true,

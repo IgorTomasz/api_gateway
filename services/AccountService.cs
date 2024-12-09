@@ -11,8 +11,10 @@ namespace api_gateway.services
 		public Task<UserProfileResponse> GetUserProfile(string endpoint, Guid userId);
 		public Task<List<UserProfileResponse>> GetAllUsers(string endpoint);
 		public Task<UserInfoResponse> GetUserInfo(string endpoint, Guid sessionId);
+		public Task<HttpResponseModel> ChangeUserPassword(string endpoint, ChangeUserPasswordUserMicroservice request);
 
-    }
+		public Task<HttpResponseModel> GetUserRefToken(string endpoint, UserRefreshTokenRequestMicroservice request);
+	}
 
 	public class AccountService : IAccountService
 	{
@@ -77,6 +79,20 @@ namespace api_gateway.services
             return JsonSerializer.Deserialize<UserInfoResponse>(content, _options);
         }
 
+		public async Task<HttpResponseModel> ChangeUserPassword(string endpoint, ChangeUserPasswordUserMicroservice request)
+		{
+			var resp = await _httpClient.PatchAsJsonAsync(endpoint, request);
+			resp.EnsureSuccessStatusCode();
+			var content = await resp.Content.ReadAsStringAsync();
+			return JsonSerializer.Deserialize<HttpResponseModel>(content, _options);
+		}
 
+		public async Task<HttpResponseModel> GetUserRefToken(string endpoint, UserRefreshTokenRequestMicroservice request)
+		{
+			var resp = await _httpClient.PostAsJsonAsync(endpoint, request);
+			resp.EnsureSuccessStatusCode();
+			var content = await resp.Content.ReadAsStringAsync();
+			return JsonSerializer.Deserialize<HttpResponseModel>(content, _options);
+		}
 	}
 }

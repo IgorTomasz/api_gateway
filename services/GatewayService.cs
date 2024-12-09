@@ -16,8 +16,10 @@ namespace api_gateway.services
 		public UserTokensResponse GenerateJwtTokens(UserProfileResponse user);
 		public Task<List<UserProfileResponse>> GetAllUsers(string endpoint);
 		public Task<UserInfoResponse> GetUserInfo(string endpoint, Guid sessionId);
+		public Task<HttpResponseModel> ChangeUserPassword(string endpoint, ChangeUserPasswordUserMicroservice request);
 
-    }
+		public Task<HttpResponseModel> GetUserRefToken(string endpoint, UserRefreshTokenRequestMicroservice request);
+	}
 	public class GatewayService : IGatewayService
 	{
 		private readonly IPaymentService _paymentService;
@@ -58,7 +60,17 @@ namespace api_gateway.services
 
 		public async Task<UserInfoResponse> GetUserInfo(string endpoint, Guid sessionId)
 		{
-			return await _accountService.GetUserProfile(endpoint, sessionId);
+			return await _accountService.GetUserInfo(endpoint, sessionId);
+		}
+
+		public async Task<HttpResponseModel> ChangeUserPassword(string endpoint, ChangeUserPasswordUserMicroservice request)
+		{
+			return await _accountService.ChangeUserPassword(endpoint, request);
+		}
+
+		public async Task<HttpResponseModel> GetUserRefToken(string endpoint, UserRefreshTokenRequestMicroservice request)
+		{
+			return await _accountService.GetUserRefToken(endpoint, request);
 		}
 
 		public UserTokensResponse GenerateJwtTokens(UserProfileResponse user)
