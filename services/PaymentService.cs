@@ -9,6 +9,8 @@ namespace api_gateway.services
 	{
 		public Task<HttpResponseModel> CreateAccount(string endpoint, CreateAccountRequestMicroservice request);
 		public Task<HttpResponseModel> HandlePayment(string endpoint, HandlePaymentRequestMicroservice request);
+		public Task<HttpResponseModel> GetUserBalanceOrTransaction(string endpoint, Guid userId);
+
 	}
 	public class PaymentService : IPaymentService
 	{
@@ -23,7 +25,15 @@ namespace api_gateway.services
 			{
 				PropertyNameCaseInsensitive = true,
 			};
-			_logger= logService;
+			_logger= logService;	
+		}
+
+		public async Task<HttpResponseModel> GetUserBalanceOrTransaction(string endpoint, Guid userId)
+		{
+			var resp = await _httpClient.GetAsync($"{endpoint}/{userId}");
+			resp.EnsureSuccessStatusCode();
+			var content = await resp.Content.ReadAsStringAsync();
+			return JsonSerializer.Deserialize<HttpResponseModel>(content, _options);
 		}
 
 		public async Task<HttpResponseModel> CreateAccount(string endpoint, CreateAccountRequestMicroservice request)

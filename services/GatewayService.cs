@@ -22,6 +22,7 @@ namespace api_gateway.services
 		public Task<HttpResponseModel> GetUserRefToken(string endpoint, UserRefreshTokenRequestMicroservice request);
 		public Task<HttpResponseModel> CreateAccount(string endpoint, CreateAccountRequestMicroservice request);
 		public Task<HttpResponseModel> HandlePayment(string endpoint, HandlePaymentRequestMicroservice request);
+		public Task<HttpResponseModel> GetUserBalanceOrTransaction(string endpoint, Guid userId);
 	}
 	public class GatewayService : IGatewayService
 	{
@@ -39,6 +40,12 @@ namespace api_gateway.services
 		public async Task<HttpResponseModel> CreateAccount(string endpoint, CreateAccountRequestMicroservice request)
 		{
 			return await _paymentService.CreateAccount(endpoint, request);
+		}
+
+
+		public async Task<HttpResponseModel> GetUserBalanceOrTransaction(string endpoint, Guid userId)
+		{
+			return await _paymentService.GetUserBalanceOrTransaction(endpoint, userId);
 		}
 
 		public async Task<HttpResponseModel> HandlePayment(string endpoint, HandlePaymentRequestMicroservice request)

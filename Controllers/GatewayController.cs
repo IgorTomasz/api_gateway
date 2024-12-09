@@ -312,6 +312,56 @@ namespace api_gateway.Controllers
 
 		}
 
+		//[Authorize]
+		[HttpGet("profile/balance/{sessionId}")]
+		public async Task<IActionResult> GetUserBalance(Guid sessionId)
+		{
+			UserInfoResponse userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", sessionId);
+
+			if (!userInfo.Success)
+			{
+				return BadRequest(new HttpResponseModel
+				{
+					Success = false,
+					Error = "There is no user connected to that session"
+				});
+			}
+
+			HttpResponseModel resp = await _gatewayService.GetUserBalanceOrTransaction("payment/Payment/wallet/balance", userInfo.UserId);
+
+			if (!resp.Success)
+			{
+				return Conflict(resp);
+			}
+
+			return Ok(resp);
+		}
+
+		//[Authorize]
+		[HttpGet("profile/transactions/{sessionId}")]
+		public async Task<IActionResult> GetUserTransactions(Guid sessionId)
+		{
+			UserInfoResponse userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", sessionId);
+
+			if (!userInfo.Success)
+			{
+				return BadRequest(new HttpResponseModel
+				{
+					Success = false,
+					Error = "There is no user connected to that session"
+				});
+			}
+
+			HttpResponseModel resp = await _gatewayService.GetUserBalanceOrTransaction("payment/Payment/wallet/transactions", userInfo.UserId);
+
+			if (!resp.Success)
+			{
+				return Conflict(resp);
+			}
+
+			return Ok(resp);
+		}
+
 		//[Authorize(Roles = "Admin")]
 		[HttpGet("adm/users")]
 		public async Task<IActionResult> GetAllUsers()
