@@ -1,5 +1,6 @@
 ﻿using api_gateway.models;
 using api_gateway.models.DTOs;
+using api_gateway.models.GameDTOs;
 using api_gateway.models.PaymentDTOs;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -15,26 +16,33 @@ namespace api_gateway.services
 		public Task<UserLoginResponse> LoginUser(string endpoint, UserLoginRequest request);
 		public Task<Guid> CreateUserSession(string endpoint, UserCreateSessionRequest request);
 		public Task<UserProfileResponse> GetUserProfile(string endpoint, Guid userId);
-		public UserTokensResponse GenerateJwtTokens(UserProfileResponse user);
+		public UserTokensResponse GenerateJwtTokens(UserResponse user);
 		public Task<List<UserProfileResponse>> GetAllUsers(string endpoint);
-		public Task<UserInfoResponse> GetUserInfo(string endpoint, Guid sessionId);
+		public Task<HttpResponseModel> GetUserInfo(string endpoint, Guid sessionId);
 		public Task<HttpResponseModel> ChangeUserPassword(string endpoint, ChangeUserPasswordUserMicroservice request);
 		public Task<HttpResponseModel> GetUserRefToken(string endpoint, UserRefreshTokenRequestMicroservice request);
 		public Task<HttpResponseModel> CreateAccount(string endpoint, CreateAccountRequestMicroservice request);
 		public Task<HttpResponseModel> HandlePayment(string endpoint, HandlePaymentRequestMicroservice request);
 		public Task<HttpResponseModel> GetUserBalanceOrTransaction(string endpoint, Guid userId);
+		public Task<GameResponse> GetAllGames(string endpoint);
+		public Task<GameResponse> GetAllGamesByCategory(string endpoint, GameCategory category);
+		public Task<ProcessGameResponse> ProcessGame(string endpoint, ProcessGameRequestMicroservice request);
+		public Task<HttpResponseModel> GetGameSessionIdByUser(string endpoint, UserGameSessionRequestMicroservice request);
+		public Task<HttpResponseModel> CheckIfGameAlreadyEnded(string endpoint, Guid gameSessionId);
 	}
 	public class GatewayService : IGatewayService
 	{
 		private readonly IPaymentService _paymentService;
 		private readonly IAccountService _accountService;
+		private readonly IGameService _gameService;
 		private readonly IConfiguration _configuration;
 
-		public GatewayService(IAccountService accountService, IPaymentService paymentService, IConfiguration configuration)
+		public GatewayService(IAccountService accountService, IPaymentService paymentService, IConfiguration configuration, IGameService gameService)
 		{
 			_paymentService = paymentService;
 			_accountService = accountService;
 			_configuration = configuration;
+			_gameService = gameService;
 		}
 
 		public async Task<HttpResponseModel> CreateAccount(string endpoint, CreateAccountRequestMicroservice request)
@@ -78,7 +86,7 @@ namespace api_gateway.services
 			return await _accountService.GetAllUsers(endpoint);
 		}
 
-		public async Task<UserInfoResponse> GetUserInfo(string endpoint, Guid sessionId)
+		public async Task<HttpResponseModel> GetUserInfo(string endpoint, Guid sessionId)
 		{
 			return await _accountService.GetUserInfo(endpoint, sessionId);
 		}
@@ -93,7 +101,32 @@ namespace api_gateway.services
 			return await _accountService.GetUserRefToken(endpoint, request);
 		}
 
-		public UserTokensResponse GenerateJwtTokens(UserProfileResponse user)
+		public async Task<GameResponse> GetAllGames(string endpoint)
+		{
+			return await _gameService.GetAllGames(endpoint);
+		}
+
+		public async Task<GameResponse> GetAllGamesByCategory(string endpoint, GameCategory category)
+		{
+			return await _gameService.GetAllGamesByCategory(endpoint, category);
+		}
+
+		public async Task<ProcessGameResponse> ProcessGame(string endpoint, ProcessGameRequestMicroservice request)
+		{
+			return await _gameService.ProcessGame(endpoint, request);
+		}
+
+		public async Task<HttpResponseModel> GetGameSessionIdByUser(string endpoint, UserGameSessionRequestMicroservice request)
+		{
+			return await _gameService.GetGameSessionIdByUser(endpoint, request);
+		}
+
+		public async Task<HttpResponseModel> CheckIfGameAlreadyEnded(string endpoint, Guid gameSessionId)
+		{
+			return await _gameService.CheckIfGameAlreadyEnded(endpoint, gameSessionId);
+		}
+
+		public UserTokensResponse GenerateJwtTokens(UserResponse user)
 		{
 			var jwtToken = GenerateJwt(user);
 			var refToken = GenerateRefToken();
@@ -105,11 +138,11 @@ namespace api_gateway.services
 			};
 		}
 
-		private string GenerateJwt(UserProfileResponse user)
+		private string GenerateJwt(UserResponse user)
 		{
 
 			var userType = "";
-			switch (user.userType)
+			switch (user.UserType)
 			{
 				case UserType.Admin: userType="Admin"; break;
 				case UserType.Client: userType="Client"; break;
@@ -118,8 +151,8 @@ namespace api_gateway.services
 
 			var policy = new[]
 			{
-				new Claim(ClaimTypes.NameIdentifier, user.userId.ToString()),
-				new Claim(ClaimTypes.Name, user.username),
+				new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+				new Claim(ClaimTypes.Name, user.Username),
 				new Claim(ClaimTypes.Role, userType)
 			};
 

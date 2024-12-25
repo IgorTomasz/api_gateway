@@ -11,7 +11,7 @@ namespace api_gateway.services
 		public Task<Guid> CreateUserSession(string endpoint, UserCreateSessionRequest request);
 		public Task<UserProfileResponse> GetUserProfile(string endpoint, Guid userId);
 		public Task<List<UserProfileResponse>> GetAllUsers(string endpoint);
-		public Task<UserInfoResponse> GetUserInfo(string endpoint, Guid sessionId);
+		public Task<HttpResponseModel> GetUserInfo(string endpoint, Guid sessionId);
 		public Task<HttpResponseModel> ChangeUserPassword(string endpoint, ChangeUserPasswordUserMicroservice request);
 
 		public Task<HttpResponseModel> GetUserRefToken(string endpoint, UserRefreshTokenRequestMicroservice request);
@@ -75,12 +75,12 @@ namespace api_gateway.services
 			return JsonSerializer.Deserialize<UserProfileResponse>(content, _options);
 		}
 
-		public async Task<UserInfoResponse> GetUserInfo(string endpoint, Guid sessionId)
+		public async Task<HttpResponseModel> GetUserInfo(string endpoint, Guid sessionId)
 		{
             var resp = await _httpClient.GetAsync($"{endpoint}/{sessionId}");
             resp.EnsureSuccessStatusCode();
             var content = await resp.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<UserInfoResponse>(content, _options);
+            return JsonSerializer.Deserialize<HttpResponseModel>(content, _options);
         }
 
 		public async Task<HttpResponseModel> ChangeUserPassword(string endpoint, ChangeUserPasswordUserMicroservice request)

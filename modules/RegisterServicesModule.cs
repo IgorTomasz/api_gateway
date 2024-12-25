@@ -21,6 +21,13 @@ namespace api_gateway.modules
 			{
 				c.DefaultRequestHeaders.Add("X-Int-Secret", configuration["ApiKey:Secret"]);
 			});
+			services.AddHttpClient<IGameService, GameService>(c =>
+			{
+				c.BaseAddress = new Uri(configuration["Services:GameService"]);
+			}).ConfigureHttpClient((provider, c) =>
+			{
+				c.DefaultRequestHeaders.Add("X-Int-Secret", configuration["ApiKey:Secret"]);
+			});
 
 			return services;
 		}

@@ -1,11 +1,14 @@
 ﻿using api_gateway.models;
 using api_gateway.models.DTOs;
+using api_gateway.models.GameDTOs;
 using api_gateway.models.PaymentDTOs;
 using api_gateway.services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using System.Net.Http;
 using System.Text.Json;
 
 namespace api_gateway.Controllers
@@ -15,9 +18,11 @@ namespace api_gateway.Controllers
 	public class GatewayController : ControllerBase
 	{
 		private readonly IGatewayService _gatewayService;
-		public GatewayController(IGatewayService gatewayService)
+		private readonly ILogger<GatewayController> _logger;
+		public GatewayController(IGatewayService gatewayService, ILogger<GatewayController> logger)
 		{
 			_gatewayService = gatewayService;
+			_logger = logger;
 		}
 
 		[HttpPost("user/register")]
@@ -54,9 +59,10 @@ namespace api_gateway.Controllers
 				});
 			}
 
-			UserProfileResponse user = await _gatewayService.GetUserProfile("account/User/profile",isLogged.UserId);
+			UserProfileResponse responseProfile = await _gatewayService.GetUserProfile("account/User/profile",isLogged.UserId);
 
-			UserTokensResponse tokens = _gatewayService.GenerateJwtTokens(user);
+
+			UserTokensResponse tokens = _gatewayService.GenerateJwtTokens(responseProfile.User);
 
 			UserCreateSessionRequest sessionRequest = new UserCreateSessionRequest
 			{
@@ -80,7 +86,7 @@ namespace api_gateway.Controllers
 		[HttpPost("profile/update-password")]
 		public async Task<IActionResult> UpdateUserPassword(ChangeUserPasswordRequest passwordRequest)
 		{
-			UserInfoResponse userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", passwordRequest.SessionId);
+			HttpResponseModel userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", passwordRequest.SessionId);
 
 			if (!userInfo.Success)
 			{
@@ -91,7 +97,9 @@ namespace api_gateway.Controllers
 				});
 			}
 
-			HttpResponseModel responseModel = await _gatewayService.ChangeUserPassword("account/User/profile/update-password", new ChangeUserPasswordUserMicroservice { userId = userInfo.UserId, newPassword = passwordRequest.Password });
+			Guid userId = Guid.Parse(userInfo.Message.ToString());
+
+			HttpResponseModel responseModel = await _gatewayService.ChangeUserPassword("account/User/profile/update-password", new ChangeUserPasswordUserMicroservice { userId = userId, newPassword = passwordRequest.Password });
 
 			if (!responseModel.Success)
 			{
@@ -109,7 +117,7 @@ namespace api_gateway.Controllers
 		[HttpGet("profile/{sessionId}")]
 		public async Task<IActionResult> GetUserProfile(Guid sessionId)
 		{
-			UserInfoResponse userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", sessionId);
+			HttpResponseModel userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", sessionId);
 
 			if (!userInfo.Success)
 			{
@@ -120,16 +128,22 @@ namespace api_gateway.Controllers
 				});
 			}
 
-			UserProfileResponse user = await _gatewayService.GetUserProfile("account/User/profile", userInfo.UserId);
+			Guid userId = Guid.Parse(userInfo.Message.ToString());
 
-			return Ok(user);
+			UserProfileResponse user = await _gatewayService.GetUserProfile("account/User/profile", userId);
+
+			return Ok(new HttpResponseModel
+			{
+				Success = true,
+				Message = user.User
+			});
 
 		}
 
 		[HttpPost("profile/refresh")]
 		public async Task<IActionResult> GetNewToken(UserRefreshTokenRequest refRequest)
 		{
-			UserInfoResponse userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", refRequest.SessionId);
+			HttpResponseModel userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", refRequest.SessionId);
 
 			if (!userInfo.Success)
 			{
@@ -140,32 +154,34 @@ namespace api_gateway.Controllers
 				});
 			}
 
+			Guid userId = Guid.Parse(userInfo.Message.ToString());
+
 			UserRefreshTokenRequestMicroservice request = new UserRefreshTokenRequestMicroservice
 			{
 				SessionId = refRequest.SessionId,
-				UserId = userInfo.UserId
+				UserId = userId
 			};
 
-			HttpResponseModel resp = await _gatewayService.GetUserRefToken("account/UserSession/auth/refresh-token", request);
+			HttpResponseModel responseToken = await _gatewayService.GetUserRefToken("account/UserSession/auth/refresh-token", request);
 
-			if (!resp.Success)
+			if (!responseToken.Success)
 			{
 				return BadRequest(new HttpResponseModel
 				{
 					Success = false,
-					Error = resp.Error
+					Error = responseToken.Error
 				});
 			}
 
-			UserProfileResponse user = await _gatewayService.GetUserProfile("account/User/profile", userInfo.UserId);
+			UserProfileResponse responseProfile = await _gatewayService.GetUserProfile("account/User/profile", userId);
 
-			if (resp.Message.Equals(refRequest.RefToken))
+			if (responseToken.Message.Equals(refRequest.RefToken))
 			{
-				UserTokensResponse tokens = _gatewayService.GenerateJwtTokens(user);
+				UserTokensResponse tokens = _gatewayService.GenerateJwtTokens(responseProfile.User);
 
 				UserCreateSessionRequest sessionRequest = new UserCreateSessionRequest
 				{
-					UserId = user.userId,
+					UserId = responseProfile.User.UserId,
 					DeviceInfo = Request.Headers["User-Agent"].ToString(),
 					IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
 					RefToken = tokens.refToken
@@ -173,11 +189,15 @@ namespace api_gateway.Controllers
 
 				Guid sessionId = await _gatewayService.CreateUserSession("account/UserSession/auth/session/create", sessionRequest);
 
-				return Created("", new
+				return Created("", new HttpResponseModel
 				{
-					SessionId = sessionId,
-					Token = tokens.jwtToken,
-					RefToken = tokens.refToken
+					Success = true,
+					Message = new
+					{
+						SessionId = sessionId,
+						Token = tokens.jwtToken,
+						RefToken = tokens.refToken
+					}
 				});
 
 			}
@@ -194,7 +214,7 @@ namespace api_gateway.Controllers
 		[HttpPost("payments/handle-deposit")]
 		public async Task<IActionResult> HandleDeposit(HandlePaymentRequest request)
 		{
-			UserInfoResponse userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", request.SessionId);
+			HttpResponseModel userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", request.SessionId);
 
 			if (!userInfo.Success)
 			{
@@ -213,11 +233,12 @@ namespace api_gateway.Controllers
 					Error = "There is no defined payment method"
 				});
 			}
-		
+
+			Guid userId = Guid.Parse(userInfo.Message.ToString());
 
 			HandlePaymentRequestMicroservice handlePaymentRequest = new HandlePaymentRequestMicroservice
 			{
-				UserId = userInfo.UserId,
+				UserId = userId,
 				Amount = request.Amount,
 				MetaData = new Dictionary<string, object>
 				{
@@ -257,7 +278,7 @@ namespace api_gateway.Controllers
 		[HttpPost("payments/handle-withdraw")]
 		public async Task<IActionResult> HandleWithdraw(HandlePaymentRequest request)
 		{
-			UserInfoResponse userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", request.SessionId);
+			HttpResponseModel userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", request.SessionId);
 
 			if (!userInfo.Success)
 			{
@@ -277,10 +298,11 @@ namespace api_gateway.Controllers
 				});
 			}
 
+			Guid userId = Guid.Parse(userInfo.Message.ToString());
 
 			HandlePaymentRequestMicroservice handlePaymentRequest = new HandlePaymentRequestMicroservice
 			{
-				UserId = userInfo.UserId,
+				UserId = userId,
 				Amount = request.Amount,
 				MetaData = new Dictionary<string, object>
 				{
@@ -316,7 +338,7 @@ namespace api_gateway.Controllers
 		[HttpGet("profile/balance/{sessionId}")]
 		public async Task<IActionResult> GetUserBalance(Guid sessionId)
 		{
-			UserInfoResponse userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", sessionId);
+			HttpResponseModel userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", sessionId);
 
 			if (!userInfo.Success)
 			{
@@ -327,7 +349,9 @@ namespace api_gateway.Controllers
 				});
 			}
 
-			HttpResponseModel resp = await _gatewayService.GetUserBalanceOrTransaction("payment/Payment/wallet/balance", userInfo.UserId);
+			Guid userId = Guid.Parse(userInfo.Message.ToString());
+
+			HttpResponseModel resp = await _gatewayService.GetUserBalanceOrTransaction("payment/Payment/wallet/balance", userId);
 
 			if (!resp.Success)
 			{
@@ -341,7 +365,7 @@ namespace api_gateway.Controllers
 		[HttpGet("profile/transactions/{sessionId}")]
 		public async Task<IActionResult> GetUserTransactions(Guid sessionId)
 		{
-			UserInfoResponse userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", sessionId);
+			HttpResponseModel userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", sessionId);
 
 			if (!userInfo.Success)
 			{
@@ -352,7 +376,9 @@ namespace api_gateway.Controllers
 				});
 			}
 
-			HttpResponseModel resp = await _gatewayService.GetUserBalanceOrTransaction("payment/Payment/wallet/transactions", userInfo.UserId);
+			Guid userId = Guid.Parse(userInfo.Message.ToString());
+
+			HttpResponseModel resp = await _gatewayService.GetUserBalanceOrTransaction("payment/Payment/wallet/transactions", userId);
 
 			if (!resp.Success)
 			{
@@ -366,7 +392,191 @@ namespace api_gateway.Controllers
 		[HttpGet("adm/users")]
 		public async Task<IActionResult> GetAllUsers()
 		{
-			return Ok(await _gatewayService.GetAllUsers("account/User/adm/users"));
+			return Ok(new HttpResponseModel
+			{
+				Success = true,
+				Message = await _gatewayService.GetAllUsers("account/User/adm/users")
+			});
+		}
+
+		[HttpGet("games")]
+		public async Task<IActionResult> GetAllGames()
+		{
+			var games = await _gatewayService.GetAllGames("Game/games");
+			
+			return Ok(new HttpResponseModel
+			{
+				Success = true,
+				Message = games.Games
+			});
+		}
+
+		[HttpGet("games/{category}")]
+		public async Task<IActionResult> GetAllGames(string category)
+		{
+			GameCategory gameCategory = Enum.Parse<GameCategory>(category);
+			var games = await _gatewayService.GetAllGamesByCategory("Game/games", gameCategory);
+
+			return Ok(new HttpResponseModel
+			{
+				Success = true,
+				Message = games.Games
+			});
+		}
+
+		[HttpPost("games/{game}")]
+		public async Task<IActionResult> ProcessGameRequest(string game, ProcessGameRequest request)
+		{
+			GameType gameType = (GameType)Enum.Parse(typeof(GameType), game);
+
+			HttpResponseModel userInfo = await _gatewayService.GetUserInfo("account/UserSession/profile/userInfo", request.UserSessionId);
+
+			Guid userId = Guid.Parse(userInfo.Message.ToString());
+
+
+			switch (gameType)
+			{
+				case GameType.Plinko:
+					{
+						ProcessGameRequestMicroservice requestStart = new ProcessGameRequestMicroservice
+						{
+							Type = gameType,
+							UserId = userId,
+							UserSessionId = request.UserSessionId,
+							Action = ActionType.Start,
+							BetAmount = request.BetAmount,
+							Data = request.Data
+						};
+
+						ProcessGameResponse start = await _gatewayService.ProcessGame("Game/process", requestStart);
+
+						if (!start.Success)
+						{
+							return BadRequest(new HttpResponseModel
+							{
+								Success = false,
+								Error = start.Error
+							});
+						}
+
+						Guid gameSessionid = Guid.Parse(start.Message.ToString());
+
+						ProcessGameRequestMicroservice requestMove = new ProcessGameRequestMicroservice
+						{
+							Type = gameType,
+							UserId = userId,
+							GameSessionId = gameSessionid,
+							UserSessionId = request.UserSessionId,
+							Action = ActionType.Move,
+							BetAmount = request.BetAmount,
+							Data = request.Data
+						};
+
+						ProcessGameResponse result = await _gatewayService.ProcessGame("Game/process", requestMove);
+						if (!result.Success)
+						{
+							return Conflict(new HttpResponseModel
+							{
+								Success = false,
+								Error = result.Error
+							});
+						}
+						return Ok(new HttpResponseModel
+						{
+							Success = true,
+							Message = result.Message,
+						});
+					}
+				case GameType.Dice:
+					{
+						ProcessGameResponse start = await _gatewayService.ProcessGame("Game/process", new ProcessGameRequestMicroservice
+						{
+							Type = gameType,
+							UserId = userId,
+							UserSessionId = request.UserSessionId,
+							Action = ActionType.Start,
+							BetAmount = request.BetAmount,
+							Data = request.Data
+						});
+
+						Guid gameSessionId = Guid.Parse(start.Message.ToString());
+
+						ProcessGameResponse result = await _gatewayService.ProcessGame("Game/process", new ProcessGameRequestMicroservice
+						{
+							Type = gameType,
+							UserId = userId,
+							GameSessionId = gameSessionId,
+							UserSessionId = request.UserSessionId,
+							Action = ActionType.Move,
+							BetAmount = request.BetAmount,
+							Data = request.Data
+						});
+						if (!result.Success)
+						{
+							return Conflict(new HttpResponseModel
+							{
+								Success = false,
+								Error = result.Error
+							});
+						}
+						return Ok(new HttpResponseModel
+						{
+							Success = true,
+							Message = result.Message,
+						});
+					}
+				default:
+					{
+						Guid gameSessionId = Guid.Empty;
+						if (request.Action == ActionType.Move)
+						{
+							var gameSessionResponse = await _gatewayService.GetGameSessionIdByUser("Game/getSession", new UserGameSessionRequestMicroservice
+							{
+								UserId = userId,
+								UserSessionId = request.UserSessionId,
+								GameType = gameType,
+							});
+
+							gameSessionId = Guid.Parse(gameSessionResponse.Message.ToString());
+
+							var ifEnded = await _gatewayService.CheckIfGameAlreadyEnded("Game/games/ended", gameSessionId);
+
+							if ((bool)ifEnded.Message)
+							{
+								return Conflict(new HttpResponseModel
+								{
+									Success = false,
+									Error = "Game already ended!"
+								});
+							}
+						}
+
+						ProcessGameResponse result = await _gatewayService.ProcessGame("Game/process", new ProcessGameRequestMicroservice
+						{
+							Type = gameType,
+							UserId = userId,
+							GameSessionId = gameSessionId == Guid.Empty ? null : gameSessionId,
+							UserSessionId = request.UserSessionId,
+							Action = request.Action,
+							BetAmount = request.BetAmount,
+							Data = request.Data
+						});
+
+						if (!result.Success)
+						{
+							return Conflict(new HttpResponseModel
+							{
+								Success = false,
+								Error = result.Error
+							});
+						}
+						return Ok(new HttpResponseModel
+						{
+							Success = true,
+							Message = result.Message,
+						});
+					}
+			}
 		}
 	}
 }
