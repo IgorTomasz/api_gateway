@@ -439,10 +439,31 @@ namespace api_gateway.Controllers
 			Guid userId = Guid.Parse(userInfo.Message.ToString());
 
 
+
 			switch (gameType)
 			{
 				case GameType.Plinko:
 					{
+						HttpResponseModel resp = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
+						{
+							UserId = userId,
+							Amount = request.BetAmount,
+							MetaData = new Dictionary<string, object>
+										{
+											{"PaymentMethod", "System"},
+											{"TransactionType", "GameBet" }
+										}
+						});
+
+						if (!resp.Success)
+						{
+							return Conflict(new HttpResponseModel
+							{
+								Success = false,
+								Error = resp.Error
+							});
+						}
+
 						ProcessGameRequestMicroservice requestStart = new ProcessGameRequestMicroservice
 						{
 							Type = gameType,
@@ -486,6 +507,32 @@ namespace api_gateway.Controllers
 								Error = result.Error
 							});
 						}
+
+						var gameResult = JsonSerializer.Deserialize<GameResult>(result.Message.ToString());
+
+						if(gameResult.Status == GameStatus.EndedWin)
+						{
+							HttpResponseModel payWinResponse = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
+							{
+								UserId = userId,
+								Amount = gameResult.Result,
+								MetaData = new Dictionary<string, object>
+											{
+												{"PaymentMethod", "System"},
+												{"TransactionType", "GameWin" }
+											}
+							});
+
+							if (!payWinResponse.Success)
+							{
+								return Conflict(new HttpResponseModel
+								{
+									Success = false,
+									Error = payWinResponse.Error
+								});
+							}
+						}
+
 						return Ok(new HttpResponseModel
 						{
 							Success = true,
@@ -494,6 +541,26 @@ namespace api_gateway.Controllers
 					}
 				case GameType.Dice:
 					{
+						HttpResponseModel resp = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
+						{
+							UserId = userId,
+							Amount = request.BetAmount,
+							MetaData = new Dictionary<string, object>
+										{
+											{"PaymentMethod", "System"},
+											{"TransactionType", "GameBet" }
+										}
+						});
+
+						if (!resp.Success)
+						{
+							return Conflict(new HttpResponseModel
+							{
+								Success = false,
+								Error = resp.Error
+							});
+						}
+
 						ProcessGameResponse start = await _gatewayService.ProcessGame("Game/process", new ProcessGameRequestMicroservice
 						{
 							Type = gameType,
@@ -524,6 +591,32 @@ namespace api_gateway.Controllers
 								Error = result.Error
 							});
 						}
+
+						var gameResult = JsonSerializer.Deserialize<GameResult>(result.Message.ToString());
+
+						if (gameResult.Status == GameStatus.EndedWin)
+						{
+							HttpResponseModel payWinResponse = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
+							{
+								UserId = userId,
+								Amount = gameResult.Result,
+								MetaData = new Dictionary<string, object>
+											{
+												{"PaymentMethod", "System"},
+												{"TransactionType", "GameWin" }
+											}
+							});
+
+							if (!payWinResponse.Success)
+							{
+								return Conflict(new HttpResponseModel
+								{
+									Success = false,
+									Error = payWinResponse.Error
+								});
+							}
+						}
+
 						return Ok(new HttpResponseModel
 						{
 							Success = true,
@@ -532,6 +625,29 @@ namespace api_gateway.Controllers
 					}
 				default:
 					{
+						if (request.Action == ActionType.Start)
+						{
+							HttpResponseModel resp = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
+							{
+								UserId = userId,
+								Amount = request.BetAmount,
+								MetaData = new Dictionary<string, object>
+											{
+												{"PaymentMethod", "System"},
+												{"TransactionType", "GameBet" }
+											}
+							});
+
+							if (!resp.Success)
+							{
+								return Conflict(new HttpResponseModel
+								{
+									Success = false,
+									Error = resp.Error
+								});
+							}
+						}
+
 						Guid gameSessionId = Guid.Empty;
 						if (request.Action == ActionType.Move)
 						{
@@ -575,6 +691,32 @@ namespace api_gateway.Controllers
 								Error = result.Error
 							});
 						}
+
+						var gameResult = JsonSerializer.Deserialize<GameResult>(result.Message.ToString());
+
+						if (gameResult.Status == GameStatus.EndedWin)
+						{
+							HttpResponseModel payWinResponse = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
+							{
+								UserId = userId,
+								Amount = gameResult.Result,
+								MetaData = new Dictionary<string, object>
+											{
+												{"PaymentMethod", "System"},
+												{"TransactionType", "GameWin" }
+											}
+							});
+
+							if (!payWinResponse.Success)
+							{
+								return Conflict(new HttpResponseModel
+								{
+									Success = false,
+									Error = payWinResponse.Error
+								});
+							}
+						}
+
 						return Ok(new HttpResponseModel
 						{
 							Success = true,
