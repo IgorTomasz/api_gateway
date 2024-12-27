@@ -29,6 +29,7 @@ namespace api_gateway.services
 		public Task<ProcessGameResponse> ProcessGame(string endpoint, ProcessGameRequestMicroservice request);
 		public Task<HttpResponseModel> GetGameSessionIdByUser(string endpoint, UserGameSessionRequestMicroservice request);
 		public Task<HttpResponseModel> CheckIfGameAlreadyEnded(string endpoint, Guid gameSessionId);
+		public Task<ProcessGameStartResponse> ProcessGameStart(string endpoint, ProcessGameRequestMicroservice request);
 	}
 	public class GatewayService : IGatewayService
 	{
@@ -124,6 +125,11 @@ namespace api_gateway.services
 		public async Task<HttpResponseModel> CheckIfGameAlreadyEnded(string endpoint, Guid gameSessionId)
 		{
 			return await _gameService.CheckIfGameAlreadyEnded(endpoint, gameSessionId);
+		}
+
+		public async Task<ProcessGameStartResponse> ProcessGameStart(string endpoint, ProcessGameRequestMicroservice request)
+		{
+			return await _gameService.ProcessGameStart(endpoint, request);
 		}
 
 		public UserTokensResponse GenerateJwtTokens(UserResponse user)

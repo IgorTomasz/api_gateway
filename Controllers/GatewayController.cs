@@ -474,7 +474,7 @@ namespace api_gateway.Controllers
 							Data = request.Data
 						};
 
-						ProcessGameResponse start = await _gatewayService.ProcessGame("Game/process", requestStart);
+						ProcessGameStartResponse start = await _gatewayService.ProcessGameStart("Game/process", requestStart);
 
 						if (!start.Success)
 						{
@@ -508,14 +508,12 @@ namespace api_gateway.Controllers
 							});
 						}
 
-						var gameResult = JsonSerializer.Deserialize<GameResult>(result.Message.ToString());
-
-						if(gameResult.Status == GameStatus.EndedWin)
+						if(result.Message.Status == GameStatus.EndedWin)
 						{
 							HttpResponseModel payWinResponse = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
 							{
 								UserId = userId,
-								Amount = gameResult.Result,
+								Amount = result.Message.Result,
 								MetaData = new Dictionary<string, object>
 											{
 												{"PaymentMethod", "System"},
@@ -561,7 +559,7 @@ namespace api_gateway.Controllers
 							});
 						}
 
-						ProcessGameResponse start = await _gatewayService.ProcessGame("Game/process", new ProcessGameRequestMicroservice
+						ProcessGameRequestMicroservice requestStart = new ProcessGameRequestMicroservice
 						{
 							Type = gameType,
 							UserId = userId,
@@ -569,7 +567,18 @@ namespace api_gateway.Controllers
 							Action = ActionType.Start,
 							BetAmount = request.BetAmount,
 							Data = request.Data
-						});
+						};
+
+						ProcessGameStartResponse start = await _gatewayService.ProcessGameStart("Game/process", requestStart);
+
+						if (!start.Success)
+						{
+							return BadRequest(new HttpResponseModel
+							{
+								Success = false,
+								Error = start.Error
+							});
+						}
 
 						Guid gameSessionId = Guid.Parse(start.Message.ToString());
 
@@ -592,14 +601,12 @@ namespace api_gateway.Controllers
 							});
 						}
 
-						var gameResult = JsonSerializer.Deserialize<GameResult>(result.Message.ToString());
-
-						if (gameResult.Status == GameStatus.EndedWin)
+						if (result.Message.Status == GameStatus.EndedWin)
 						{
 							HttpResponseModel payWinResponse = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
 							{
 								UserId = userId,
-								Amount = gameResult.Result,
+								Amount = result.Message.Result,
 								MetaData = new Dictionary<string, object>
 											{
 												{"PaymentMethod", "System"},
@@ -646,6 +653,32 @@ namespace api_gateway.Controllers
 									Error = resp.Error
 								});
 							}
+
+							ProcessGameStartResponse resultStart = await _gatewayService.ProcessGameStart("Game/process", new ProcessGameRequestMicroservice
+							{
+								Type = gameType,
+								UserId = userId,
+								GameSessionId = null,
+								UserSessionId = request.UserSessionId,
+								Action = request.Action,
+								BetAmount = request.BetAmount,
+								Data = request.Data
+							});
+
+							if (!resultStart.Success)
+							{
+								return Conflict(new HttpResponseModel
+								{
+									Success = false,
+									Error = resultStart.Error
+								});
+							}
+
+							return Ok(new HttpResponseModel
+							{
+								Success = true,
+								Message = resultStart.Message,
+							});
 						}
 
 						Guid gameSessionId = Guid.Empty;
@@ -692,14 +725,12 @@ namespace api_gateway.Controllers
 							});
 						}
 
-						var gameResult = JsonSerializer.Deserialize<GameResult>(result.Message.ToString());
-
-						if (gameResult.Status == GameStatus.EndedWin)
+						if (result.Message.Status == GameStatus.EndedWin)
 						{
 							HttpResponseModel payWinResponse = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
 							{
 								UserId = userId,
-								Amount = gameResult.Result,
+								Amount = result.Message.Result,
 								MetaData = new Dictionary<string, object>
 											{
 												{"PaymentMethod", "System"},

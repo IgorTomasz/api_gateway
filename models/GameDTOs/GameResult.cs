@@ -5,7 +5,7 @@
 		public GameStatus Status { get; set; }
 		public decimal Multiplier { get; set; }
 		public decimal Result { get; set; }
-		public Dictionary<string, object> Data { get; set; }
+		public Dictionary<string, object>? Data { get; set; }
 	}
 
 	public enum GameStatus
