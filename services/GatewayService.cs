@@ -17,7 +17,7 @@ namespace api_gateway.services
 		public Task<Guid> CreateUserSession(string endpoint, UserCreateSessionRequest request);
 		public Task<UserProfileResponse> GetUserProfile(string endpoint, Guid userId);
 		public UserTokensResponse GenerateJwtTokens(UserResponse user);
-		public Task<List<UserProfileResponse>> GetAllUsers(string endpoint);
+		public Task<List<UserResponse>> GetAllUsers(string endpoint);
 		public Task<HttpResponseModel> GetUserInfo(string endpoint, Guid sessionId);
 		public Task<HttpResponseModel> ChangeUserPassword(string endpoint, ChangeUserPasswordUserMicroservice request);
 		public Task<HttpResponseModel> GetUserRefToken(string endpoint, UserRefreshTokenRequestMicroservice request);
@@ -81,7 +81,7 @@ namespace api_gateway.services
 			return await _accountService.GetUserProfile(endpoint, userId);
 		}
 
-		public async Task<List<UserProfileResponse>> GetAllUsers(string endpoint)
+		public async Task<List<UserResponse>> GetAllUsers(string endpoint)
 		{
 			return await _accountService.GetAllUsers(endpoint);
 		}

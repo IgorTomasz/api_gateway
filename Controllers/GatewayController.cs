@@ -41,7 +41,8 @@ namespace api_gateway.Controllers
 			await _gatewayService.CreateAccount("payment/Payment/account/create", new CreateAccountRequestMicroservice { UserId = userId });
 			return Created("", new HttpResponseModel
 			{
-				Success = true
+				Success = true,
+				Message = userId
 			});
 		}
 
@@ -74,11 +75,15 @@ namespace api_gateway.Controllers
 
 			Guid sessionId = await _gatewayService.CreateUserSession("account/UserSession/auth/session/create", sessionRequest);
 
-			return Created("", new
+			return Ok(new HttpResponseModel
 			{
-				SessionId = sessionId,
-				Token = tokens.jwtToken,
-				RefToken = tokens.refToken
+				Success = true,
+				Message = new
+				{
+					SessionId = sessionId,
+					Token = tokens.jwtToken,
+					RefToken = tokens.refToken
+				}
 			});
 		}
 
@@ -189,7 +194,7 @@ namespace api_gateway.Controllers
 
 				Guid sessionId = await _gatewayService.CreateUserSession("account/UserSession/auth/session/create", sessionRequest);
 
-				return Created("", new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = true,
 					Message = new

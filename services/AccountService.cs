@@ -10,7 +10,7 @@ namespace api_gateway.services
 		public Task<UserLoginResponse> LoginUser(string endpoint, UserLoginRequest request);
 		public Task<Guid> CreateUserSession(string endpoint, UserCreateSessionRequest request);
 		public Task<UserProfileResponse> GetUserProfile(string endpoint, Guid userId);
-		public Task<List<UserProfileResponse>> GetAllUsers(string endpoint);
+		public Task<List<UserResponse>> GetAllUsers(string endpoint);
 		public Task<HttpResponseModel> GetUserInfo(string endpoint, Guid sessionId);
 		public Task<HttpResponseModel> ChangeUserPassword(string endpoint, ChangeUserPasswordUserMicroservice request);
 
@@ -34,13 +34,13 @@ namespace api_gateway.services
 			_logger = logService;
 		}
 
-		public async Task<List<UserProfileResponse>> GetAllUsers(string endpoint)
+		public async Task<List<UserResponse>> GetAllUsers(string endpoint)
 		{
 			_logger.Log(endpoint, _httpClient.BaseAddress);
 			var resp = await _httpClient.GetAsync(endpoint);
 			resp.EnsureSuccessStatusCode();
 			var content = await resp.Content.ReadAsStringAsync();
-			return JsonSerializer.Deserialize<List<UserProfileResponse>>(content, _options);
+			return JsonSerializer.Deserialize<List<UserResponse>>(content, _options);
 		}
 
 		public async Task<HttpResponseModel> RegisterUser (string endpoint, UserRegisterRequest request)

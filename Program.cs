@@ -11,6 +11,7 @@ namespace api_gateway
     {
         public static void Main(string[] args)
         {
+            var allowFrontend = "_allowFrontend";
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
@@ -46,6 +47,18 @@ namespace api_gateway
                             )
                     };
                 });
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(name: allowFrontend,
+                                  policy =>
+                                  {
+                                      policy.WithOrigins("http://localhost:3000","http://localhost:8085", "http://frontend")
+                                      .AllowAnyHeader()
+                                      .AllowAnyMethod();
+
+                                  });
+            });
+
 
             var app = builder.Build();
 
@@ -55,6 +68,8 @@ namespace api_gateway
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            app.UseCors(allowFrontend);
 
             app.UseHttpsRedirection();
 
