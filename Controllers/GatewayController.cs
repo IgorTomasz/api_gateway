@@ -31,7 +31,7 @@ namespace api_gateway.Controllers
 			HttpResponseModel resp = await _gatewayService.RegisterUser("account/User/auth/register", registerRequest);
 			if (!resp.Success)
 			{
-				return BadRequest(new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = false,
 					Error = resp.Error
@@ -53,7 +53,7 @@ namespace api_gateway.Controllers
 
 			if (!isLogged.Success && isLogged.UserId==Guid.Empty)
 			{
-				return BadRequest(new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = false,
 					Error = isLogged.Error
@@ -95,7 +95,7 @@ namespace api_gateway.Controllers
 
 			if (!userInfo.Success)
 			{
-				return BadRequest(new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = false,
 					Error = "There is no user connected to that session"
@@ -108,7 +108,7 @@ namespace api_gateway.Controllers
 
 			if (!responseModel.Success)
 			{
-				return Conflict(new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = false,
 					Error = "Something went wrong while changing user password"
@@ -126,7 +126,7 @@ namespace api_gateway.Controllers
 
 			if (!userInfo.Success)
 			{
-				return BadRequest(new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = false,
 					Error = "There is no user connected to that session"
@@ -152,7 +152,7 @@ namespace api_gateway.Controllers
 
 			if (!userInfo.Success)
 			{
-				return BadRequest(new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = false,
 					Error = "There is no user connected to that session"
@@ -171,7 +171,7 @@ namespace api_gateway.Controllers
 
 			if (!responseToken.Success)
 			{
-				return BadRequest(new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = false,
 					Error = responseToken.Error
@@ -223,7 +223,7 @@ namespace api_gateway.Controllers
 
 			if (!userInfo.Success)
 			{
-				return BadRequest(new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = false,
 					Error = "There is no user connected to that session"
@@ -232,7 +232,7 @@ namespace api_gateway.Controllers
 
 			if (request.PaymentMethod == null)
 			{
-				return BadRequest(new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = false,
 					Error = "There is no defined payment method"
@@ -264,7 +264,7 @@ namespace api_gateway.Controllers
 
 			if (!resp.Success)
 			{
-				return Conflict(new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = false,
 					Error = resp.Error
@@ -287,7 +287,7 @@ namespace api_gateway.Controllers
 
 			if (!userInfo.Success)
 			{
-				return BadRequest(new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = false,
 					Error = "There is no user connected to that session"
@@ -296,7 +296,7 @@ namespace api_gateway.Controllers
 
 			if (request.PaymentMethod == null)
 			{
-				return BadRequest(new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = false,
 					Error = "There is no defined payment method"
@@ -328,7 +328,7 @@ namespace api_gateway.Controllers
 
 			if (!resp.Success)
 			{
-				return Conflict(new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = false,
 					Error = resp.Error
@@ -347,7 +347,7 @@ namespace api_gateway.Controllers
 
 			if (!userInfo.Success)
 			{
-				return BadRequest(new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = false,
 					Error = "There is no user connected to that session"
@@ -360,7 +360,7 @@ namespace api_gateway.Controllers
 
 			if (!resp.Success)
 			{
-				return Conflict(resp);
+				return Ok(resp);
 			}
 
 			return Ok(resp);
@@ -374,7 +374,7 @@ namespace api_gateway.Controllers
 
 			if (!userInfo.Success)
 			{
-				return BadRequest(new HttpResponseModel
+				return Ok(new HttpResponseModel
 				{
 					Success = false,
 					Error = "There is no user connected to that session"
@@ -387,7 +387,7 @@ namespace api_gateway.Controllers
 
 			if (!resp.Success)
 			{
-				return Conflict(resp);
+				return Ok(resp);
 			}
 
 			return Ok(resp);
@@ -457,7 +457,7 @@ namespace api_gateway.Controllers
 
 						if (!resp.Success)
 						{
-							return Conflict(new HttpResponseModel
+							return Ok(new HttpResponseModel
 							{
 								Success = false,
 								Error = resp.Error
@@ -478,7 +478,7 @@ namespace api_gateway.Controllers
 
 						if (!start.Success)
 						{
-							return BadRequest(new HttpResponseModel
+							return Ok(new HttpResponseModel
 							{
 								Success = false,
 								Error = start.Error
@@ -501,7 +501,7 @@ namespace api_gateway.Controllers
 						ProcessGameResponse result = await _gatewayService.ProcessGame("Game/process", requestMove);
 						if (!result.Success)
 						{
-							return Conflict(new HttpResponseModel
+							return Ok(new HttpResponseModel
 							{
 								Success = false,
 								Error = result.Error
@@ -523,7 +523,7 @@ namespace api_gateway.Controllers
 
 							if (!payWinResponse.Success)
 							{
-								return Conflict(new HttpResponseModel
+								return Ok(new HttpResponseModel
 								{
 									Success = false,
 									Error = payWinResponse.Error
@@ -552,7 +552,7 @@ namespace api_gateway.Controllers
 
 						if (!resp.Success)
 						{
-							return Conflict(new HttpResponseModel
+							return Ok(new HttpResponseModel
 							{
 								Success = false,
 								Error = resp.Error
@@ -573,7 +573,7 @@ namespace api_gateway.Controllers
 
 						if (!start.Success)
 						{
-							return BadRequest(new HttpResponseModel
+							return Ok(new HttpResponseModel
 							{
 								Success = false,
 								Error = start.Error
@@ -594,7 +594,7 @@ namespace api_gateway.Controllers
 						});
 						if (!result.Success)
 						{
-							return Conflict(new HttpResponseModel
+							return Ok(new HttpResponseModel
 							{
 								Success = false,
 								Error = result.Error
@@ -616,7 +616,7 @@ namespace api_gateway.Controllers
 
 							if (!payWinResponse.Success)
 							{
-								return Conflict(new HttpResponseModel
+								return Ok(new HttpResponseModel
 								{
 									Success = false,
 									Error = payWinResponse.Error
@@ -647,7 +647,7 @@ namespace api_gateway.Controllers
 
 							if (!resp.Success)
 							{
-								return Conflict(new HttpResponseModel
+								return Ok(new HttpResponseModel
 								{
 									Success = false,
 									Error = resp.Error
@@ -667,7 +667,7 @@ namespace api_gateway.Controllers
 
 							if (!resultStart.Success)
 							{
-								return Conflict(new HttpResponseModel
+								return Ok(new HttpResponseModel
 								{
 									Success = false,
 									Error = resultStart.Error
