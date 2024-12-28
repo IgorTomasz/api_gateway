@@ -69,7 +69,7 @@ namespace api_gateway.Controllers
 			{
 				UserId = isLogged.UserId,
 				DeviceInfo = Request.Headers["User-Agent"].ToString(),
-				IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+				IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? Request.Headers["X-Forwarded-For"].FirstOrDefault(),
 				RefToken = tokens.refToken				
 			};
 
@@ -239,6 +239,15 @@ namespace api_gateway.Controllers
 				});
 			}
 
+			if (!("CardPaypalBlik").Contains(request.PaymentMethod))
+			{
+				return Ok(new HttpResponseModel
+				{
+					Success = false,
+					Error = "Wrong payment method"
+				});
+			}
+
 			Guid userId = Guid.Parse(userInfo.Message.ToString());
 
 			HandlePaymentRequestMicroservice handlePaymentRequest = new HandlePaymentRequestMicroservice
@@ -300,6 +309,15 @@ namespace api_gateway.Controllers
 				{
 					Success = false,
 					Error = "There is no defined payment method"
+				});
+			}
+
+			if (!("CardPaypalBlik").Contains(request.PaymentMethod))
+			{
+				return Ok(new HttpResponseModel
+				{
+					Success = false,
+					Error = "Wrong payment method"
 				});
 			}
 
