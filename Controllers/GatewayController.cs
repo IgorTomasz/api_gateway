@@ -422,6 +422,12 @@ namespace api_gateway.Controllers
 			});
 		}
 
+		[HttpPut("adm/games/update")]
+		public async Task<IActionResult> UpdateGames(AdminGameUpdate request)
+		{
+			return Ok(await _gatewayService.UpdateGames("adm/games/update",request));
+		}
+
 		[HttpGet("games")]
 		public async Task<IActionResult> GetAllGames()
 		{
@@ -692,28 +698,24 @@ namespace api_gateway.Controllers
 								});
 							}
 
-							return Ok(new HttpResponseModel
-							{
-								Success = true,
-								Message = resultStart.Message,
-							});
+							return Ok(resultStart);
 						}
 
-						Guid gameSessionId = Guid.Empty;
+						var gameSessionResponse = await _gatewayService.GetGameSessionIdByUser("Game/getSession", new UserGameSessionRequestMicroservice
+						{
+							UserId = userId,
+							UserSessionId = request.UserSessionId,
+							GameType = gameType,
+						});
+
+						Guid gameSessionId = Guid.Parse(gameSessionResponse.Message.ToString());
 						if (request.Action == ActionType.Move)
 						{
-							var gameSessionResponse = await _gatewayService.GetGameSessionIdByUser("Game/getSession", new UserGameSessionRequestMicroservice
-							{
-								UserId = userId,
-								UserSessionId = request.UserSessionId,
-								GameType = gameType,
-							});
-
-							gameSessionId = Guid.Parse(gameSessionResponse.Message.ToString());
+							
 
 							var ifEnded = await _gatewayService.CheckIfGameAlreadyEnded("Game/games/ended", gameSessionId);
 
-							if ((bool)ifEnded.Message)
+							if (ifEnded.Success)
 							{
 								return Conflict(new HttpResponseModel
 								{
@@ -727,7 +729,7 @@ namespace api_gateway.Controllers
 						{
 							Type = gameType,
 							UserId = userId,
-							GameSessionId = gameSessionId == Guid.Empty ? null : gameSessionId,
+							GameSessionId = gameSessionId,
 							UserSessionId = request.UserSessionId,
 							Action = request.Action,
 							BetAmount = request.BetAmount,
@@ -766,11 +768,7 @@ namespace api_gateway.Controllers
 							}
 						}
 
-						return Ok(new HttpResponseModel
-						{
-							Success = true,
-							Message = result.Message,
-						});
+						return Ok(result);
 					}
 			}
 		}

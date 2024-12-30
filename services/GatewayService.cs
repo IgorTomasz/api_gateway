@@ -30,6 +30,7 @@ namespace api_gateway.services
 		public Task<HttpResponseModel> GetGameSessionIdByUser(string endpoint, UserGameSessionRequestMicroservice request);
 		public Task<HttpResponseModel> CheckIfGameAlreadyEnded(string endpoint, Guid gameSessionId);
 		public Task<ProcessGameStartResponse> ProcessGameStart(string endpoint, ProcessGameRequestMicroservice request);
+		public Task<HttpResponseModel> UpdateGames(string endpoint, AdminGameUpdate request);
 	}
 	public class GatewayService : IGatewayService
 	{
@@ -65,6 +66,11 @@ namespace api_gateway.services
 		public async Task<HttpResponseModel> RegisterUser(string endpoint, UserRegisterRequest request)
 		{
 			return await _accountService.RegisterUser(endpoint, request);
+		}
+
+		public async Task<HttpResponseModel> UpdateGames(string endpoint, AdminGameUpdate request)
+		{
+			return await _gameService.UpdateGames(endpoint, request);
 		}
 
 		public async Task<UserLoginResponse> LoginUser(string endpoint, UserLoginRequest request)
