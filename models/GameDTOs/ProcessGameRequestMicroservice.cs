@@ -22,7 +22,7 @@ namespace api_gateway.models.GameDTOs
 
 	public enum GameType
 	{
-		Mines, Plinko, Chicken, Dice, BlackJack
+		Mines, Plinko, Frog, Dice, BlackJack
 	}
 
 	public enum ActionType
