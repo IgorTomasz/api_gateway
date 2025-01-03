@@ -701,18 +701,18 @@ namespace api_gateway.Controllers
 							return Ok(resultStart);
 						}
 
-						var gameSessionResponse = await _gatewayService.GetGameSessionIdByUser("Game/getSession", new UserGameSessionRequestMicroservice
-						{
-							UserId = userId,
-							UserSessionId = request.UserSessionId,
-							GameType = gameType,
-						});
+						//var gameSessionResponse = await _gatewayService.GetGameSessionIdByUser("Game/getSession", new UserGameSessionRequestMicroservice
+						//{
+						//	UserId = userId,
+						//	UserSessionId = request.UserSessionId,
+						//	GameType = gameType,
+						//});
 
-						Guid gameSessionId = Guid.Parse(gameSessionResponse.Message.ToString());
+	
 						if (request.Action == ActionType.Move)
 						{
 							
-							var ifEnded = await _gatewayService.CheckIfGameAlreadyEnded("Game/games/ended", gameSessionId);
+							var ifEnded = await _gatewayService.CheckIfGameAlreadyEnded("Game/games/ended", request.GameSessionId);
 
 							if (ifEnded.Success)
 							{
@@ -728,7 +728,7 @@ namespace api_gateway.Controllers
 						{
 							Type = gameType,
 							UserId = userId,
-							GameSessionId = gameSessionId,
+							GameSessionId = request.GameSessionId,
 							UserSessionId = request.UserSessionId,
 							Action = request.Action,
 							BetAmount = request.BetAmount,

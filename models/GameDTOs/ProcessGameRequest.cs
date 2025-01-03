@@ -6,6 +6,7 @@ namespace api_gateway.models.GameDTOs
 	{
 		[Required]
 		public Guid UserSessionId { get; set; }
+		public Guid GameSessionId { get; set; }
 		[Required]
 		public ActionType Action { get; set; }
 		[Required]
