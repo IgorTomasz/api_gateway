@@ -464,198 +464,198 @@ namespace api_gateway.Controllers
 
 
 
-			switch (gameType)
-			{
-				case GameType.Plinko:
-					{
-						HttpResponseModel resp = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
-						{
-							UserId = userId,
-							Amount = request.BetAmount,
-							MetaData = new Dictionary<string, object>
-										{
-											{"PaymentMethod", "System"},
-											{"TransactionType", "GameBet" }
-										}
-						});
+			//switch (gameType)
+			//{
+			//	case GameType.Plinko:
+			//		{
+			//			HttpResponseModel resp = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
+			//			{
+			//				UserId = userId,
+			//				Amount = request.BetAmount,
+			//				MetaData = new Dictionary<string, object>
+			//							{
+			//								{"PaymentMethod", "System"},
+			//								{"TransactionType", "GameBet" }
+			//							}
+			//			});
 
-						if (!resp.Success)
-						{
-							return Ok(new HttpResponseModel
-							{
-								Success = false,
-								Error = resp.Error
-							});
-						}
+			//			if (!resp.Success)
+			//			{
+			//				return Ok(new HttpResponseModel
+			//				{
+			//					Success = false,
+			//					Error = resp.Error
+			//				});
+			//			}
 
-						ProcessGameRequestMicroservice requestStart = new ProcessGameRequestMicroservice
-						{
-							Type = gameType,
-							UserId = userId,
-							UserSessionId = request.UserSessionId,
-							Action = ActionType.Start,
-							BetAmount = request.BetAmount,
-							Data = request.Data
-						};
+			//			ProcessGameRequestMicroservice requestStart = new ProcessGameRequestMicroservice
+			//			{
+			//				Type = gameType,
+			//				UserId = userId,
+			//				UserSessionId = request.UserSessionId,
+			//				Action = ActionType.Start,
+			//				BetAmount = request.BetAmount,
+			//				Data = request.Data
+			//			};
 
-						ProcessGameStartResponse start = await _gatewayService.ProcessGameStart("Game/process", requestStart);
+			//			ProcessGameStartResponse start = await _gatewayService.ProcessGameStart("Game/process", requestStart);
 
-						if (!start.Success)
-						{
-							return Ok(new HttpResponseModel
-							{
-								Success = false,
-								Error = start.Error
-							});
-						}
+			//			if (!start.Success)
+			//			{
+			//				return Ok(new HttpResponseModel
+			//				{
+			//					Success = false,
+			//					Error = start.Error
+			//				});
+			//			}
 
-						Guid gameSessionid = Guid.Parse(start.Message.ToString());
+			//			Guid gameSessionid = Guid.Parse(start.Message.ToString());
 
-						ProcessGameRequestMicroservice requestMove = new ProcessGameRequestMicroservice
-						{
-							Type = gameType,
-							UserId = userId,
-							GameSessionId = gameSessionid,
-							UserSessionId = request.UserSessionId,
-							Action = ActionType.Move,
-							BetAmount = request.BetAmount,
-							Data = request.Data
-						};
+			//			ProcessGameRequestMicroservice requestMove = new ProcessGameRequestMicroservice
+			//			{
+			//				Type = gameType,
+			//				UserId = userId,
+			//				GameSessionId = gameSessionid,
+			//				UserSessionId = request.UserSessionId,
+			//				Action = ActionType.Move,
+			//				BetAmount = request.BetAmount,
+			//				Data = request.Data
+			//			};
 
-						ProcessGameResponse result = await _gatewayService.ProcessGame("Game/process", requestMove);
-						if (!result.Success)
-						{
-							return Ok(new HttpResponseModel
-							{
-								Success = false,
-								Error = result.Error
-							});
-						}
+			//			ProcessGameResponse result = await _gatewayService.ProcessGame("Game/process", requestMove);
+			//			if (!result.Success)
+			//			{
+			//				return Ok(new HttpResponseModel
+			//				{
+			//					Success = false,
+			//					Error = result.Error
+			//				});
+			//			}
 
-						if(result.Message.Status == GameStatus.EndedWin)
-						{
-							HttpResponseModel payWinResponse = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
-							{
-								UserId = userId,
-								Amount = result.Message.Result,
-								MetaData = new Dictionary<string, object>
-											{
-												{"PaymentMethod", "System"},
-												{"TransactionType", "GameWin" }
-											}
-							});
+			//			if(result.Message.Status == GameStatus.EndedWin)
+			//			{
+			//				HttpResponseModel payWinResponse = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
+			//				{
+			//					UserId = userId,
+			//					Amount = result.Message.Result,
+			//					MetaData = new Dictionary<string, object>
+			//								{
+			//									{"PaymentMethod", "System"},
+			//									{"TransactionType", "GameWin" }
+			//								}
+			//				});
 
-							if (!payWinResponse.Success)
-							{
-								return Ok(new HttpResponseModel
-								{
-									Success = false,
-									Error = payWinResponse.Error
-								});
-							}
-						}
+			//				if (!payWinResponse.Success)
+			//				{
+			//					return Ok(new HttpResponseModel
+			//					{
+			//						Success = false,
+			//						Error = payWinResponse.Error
+			//					});
+			//				}
+			//			}
 
-						return Ok(new HttpResponseModel
-						{
-							Success = true,
-							Message = result.Message,
-						});
-					}
-				case GameType.Dice:
-					{
-						HttpResponseModel resp = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
-						{
-							UserId = userId,
-							Amount = request.BetAmount,
-							MetaData = new Dictionary<string, object>
-										{
-											{"PaymentMethod", "System"},
-											{"TransactionType", "GameBet" }
-										}
-						});
+			//			return Ok(new HttpResponseModel
+			//			{
+			//				Success = true,
+			//				Message = result.Message,
+			//			});
+			//		}
+			//	case GameType.Dice:
+			//		{
+			//			HttpResponseModel resp = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
+			//			{
+			//				UserId = userId,
+			//				Amount = request.BetAmount,
+			//				MetaData = new Dictionary<string, object>
+			//							{
+			//								{"PaymentMethod", "System"},
+			//								{"TransactionType", "GameBet" }
+			//							}
+			//			});
 
-						if (!resp.Success)
-						{
-							return Ok(new HttpResponseModel
-							{
-								Success = false,
-								Error = resp.Error
-							});
-						}
+			//			if (!resp.Success)
+			//			{
+			//				return Ok(new HttpResponseModel
+			//				{
+			//					Success = false,
+			//					Error = resp.Error
+			//				});
+			//			}
 
-						ProcessGameRequestMicroservice requestStart = new ProcessGameRequestMicroservice
-						{
-							Type = gameType,
-							UserId = userId,
-							UserSessionId = request.UserSessionId,
-							Action = ActionType.Start,
-							BetAmount = request.BetAmount,
-							Data = request.Data
-						};
+			//			ProcessGameRequestMicroservice requestStart = new ProcessGameRequestMicroservice
+			//			{
+			//				Type = gameType,
+			//				UserId = userId,
+			//				UserSessionId = request.UserSessionId,
+			//				Action = ActionType.Start,
+			//				BetAmount = request.BetAmount,
+			//				Data = request.Data
+			//			};
 
-						ProcessGameStartResponse start = await _gatewayService.ProcessGameStart("Game/process", requestStart);
+			//			ProcessGameStartResponse start = await _gatewayService.ProcessGameStart("Game/process", requestStart);
 
-						if (!start.Success)
-						{
-							return Ok(new HttpResponseModel
-							{
-								Success = false,
-								Error = start.Error
-							});
-						}
+			//			if (!start.Success)
+			//			{
+			//				return Ok(new HttpResponseModel
+			//				{
+			//					Success = false,
+			//					Error = start.Error
+			//				});
+			//			}
 
-						Guid gameSessionId = Guid.Parse(start.Message.ToString());
+			//			Guid gameSessionId = Guid.Parse(start.Message.ToString());
 
-						ProcessGameResponse result = await _gatewayService.ProcessGame("Game/process", new ProcessGameRequestMicroservice
-						{
-							Type = gameType,
-							UserId = userId,
-							GameSessionId = gameSessionId,
-							UserSessionId = request.UserSessionId,
-							Action = ActionType.Move,
-							BetAmount = request.BetAmount,
-							Data = request.Data
-						});
-						if (!result.Success)
-						{
-							return Ok(new HttpResponseModel
-							{
-								Success = false,
-								Error = result.Error
-							});
-						}
+			//			ProcessGameResponse result = await _gatewayService.ProcessGame("Game/process", new ProcessGameRequestMicroservice
+			//			{
+			//				Type = gameType,
+			//				UserId = userId,
+			//				GameSessionId = gameSessionId,
+			//				UserSessionId = request.UserSessionId,
+			//				Action = ActionType.Move,
+			//				BetAmount = request.BetAmount,
+			//				Data = request.Data
+			//			});
+			//			if (!result.Success)
+			//			{
+			//				return Ok(new HttpResponseModel
+			//				{
+			//					Success = false,
+			//					Error = result.Error
+			//				});
+			//			}
 
-						if (result.Message.Status == GameStatus.EndedWin)
-						{
-							HttpResponseModel payWinResponse = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
-							{
-								UserId = userId,
-								Amount = result.Message.Result,
-								MetaData = new Dictionary<string, object>
-											{
-												{"PaymentMethod", "System"},
-												{"TransactionType", "GameWin" }
-											}
-							});
+			//			if (result.Message.Status == GameStatus.EndedWin)
+			//			{
+			//				HttpResponseModel payWinResponse = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
+			//				{
+			//					UserId = userId,
+			//					Amount = result.Message.Result,
+			//					MetaData = new Dictionary<string, object>
+			//								{
+			//									{"PaymentMethod", "System"},
+			//									{"TransactionType", "GameWin" }
+			//								}
+			//				});
 
-							if (!payWinResponse.Success)
-							{
-								return Ok(new HttpResponseModel
-								{
-									Success = false,
-									Error = payWinResponse.Error
-								});
-							}
-						}
+			//				if (!payWinResponse.Success)
+			//				{
+			//					return Ok(new HttpResponseModel
+			//					{
+			//						Success = false,
+			//						Error = payWinResponse.Error
+			//					});
+			//				}
+			//			}
 
-						return Ok(new HttpResponseModel
-						{
-							Success = true,
-							Message = result.Message,
-						});
-					}
-				default:
-					{
+			//			return Ok(new HttpResponseModel
+			//			{
+			//				Success = true,
+			//				Message = result.Message,
+			//			});
+			//		}
+			//	default:
+			//		{
 						if (request.Action == ActionType.Start)
 						{
 							HttpResponseModel resp = await _gatewayService.HandlePayment("payment/Payment/payments/handle-payment", new HandlePaymentRequestMicroservice
@@ -712,7 +712,6 @@ namespace api_gateway.Controllers
 						if (request.Action == ActionType.Move)
 						{
 							
-
 							var ifEnded = await _gatewayService.CheckIfGameAlreadyEnded("Game/games/ended", gameSessionId);
 
 							if (ifEnded.Success)
@@ -769,7 +768,7 @@ namespace api_gateway.Controllers
 						}
 
 						return Ok(result);
-					}
+					
 			}
 		}
 	}
