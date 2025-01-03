@@ -772,4 +772,4 @@ namespace api_gateway.Controllers
 			}
 		}
 	}
-}
+
