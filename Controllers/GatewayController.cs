@@ -63,7 +63,7 @@ namespace api_gateway.Controllers
 
 			UserProfileResponse responseProfile = await _gatewayService.GetUserProfile("account/User/profile",isLogged.UserId);
 
-
+			
 			UserTokensResponse tokens = _gatewayService.GenerateJwtTokens(responseProfile.User);
 
 			UserCreateSessionRequest sessionRequest = new UserCreateSessionRequest
@@ -427,14 +427,14 @@ namespace api_gateway.Controllers
 		[HttpPut("adm/games/update")]
 		public async Task<IActionResult> UpdateGames(AdminGameUpdate request)
 		{
-			return Ok(await _gatewayService.UpdateGames("adm/games/update",request));
+			return Ok(await _gatewayService.UpdateGames("Game/adm/games/update",request));
 		}
 
 		[Authorize(Roles = "Admin")]
 		[HttpGet("adm/games")]
 		public async Task<IActionResult> GetAllGamesAdmin()
 		{
-			var games = await _gatewayService.GetAllGamesAdmin("adm/games");
+			var games = await _gatewayService.GetAllGamesAdmin("Game/adm/games");
 
 			return Ok(new HttpResponseModel
 			{
