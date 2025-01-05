@@ -180,7 +180,9 @@ namespace api_gateway.Controllers
 
 			UserProfileResponse responseProfile = await _gatewayService.GetUserProfile("account/User/profile", userId);
 
-			if (responseToken.Message.Equals(refRequest.RefToken))
+			string token = responseToken.Message.ToString();
+
+			if (token.Equals(refRequest.RefToken))
 			{
 				UserTokensResponse tokens = _gatewayService.GenerateJwtTokens(responseProfile.User);
 

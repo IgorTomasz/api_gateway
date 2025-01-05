@@ -36,6 +36,7 @@ namespace api_gateway
                 {
                     opt.TokenValidationParameters = new TokenValidationParameters
                     {
+                        ClockSkew = TimeSpan.Zero,
                         ValidateIssuer = true,
                         ValidateAudience = true,
                         ValidateLifetime = true,
@@ -72,7 +73,7 @@ namespace api_gateway
             app.UseCors(allowFrontend);
 
             app.UseHttpsRedirection();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
 
