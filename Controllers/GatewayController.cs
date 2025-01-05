@@ -1,4 +1,5 @@
 ﻿using api_gateway.models;
+using api_gateway.models.AccountDTOs;
 using api_gateway.models.DTOs;
 using api_gateway.models.GameDTOs;
 using api_gateway.models.PaymentDTOs;
@@ -186,22 +187,20 @@ namespace api_gateway.Controllers
 			{
 				UserTokensResponse tokens = _gatewayService.GenerateJwtTokens(responseProfile.User);
 
-				UserCreateSessionRequest sessionRequest = new UserCreateSessionRequest
+				UpdateSessionWithRefTokenRequestMicroservice sessionUpdateRequest = new UpdateSessionWithRefTokenRequestMicroservice
 				{
-					UserId = responseProfile.User.UserId,
-					DeviceInfo = Request.Headers["User-Agent"].ToString(),
-					IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+					SessionId = refRequest.SessionId,
 					RefToken = tokens.refToken
 				};
 
-				Guid sessionId = await _gatewayService.CreateUserSession("account/UserSession/auth/session/create", sessionRequest);
+				HttpResponseModel model = await _gatewayService.UpdateSessionOnRefreshToken("account/UserSession/auth/session/update", sessionUpdateRequest);
 
 				return Ok(new HttpResponseModel
 				{
 					Success = true,
 					Message = new
 					{
-						SessionId = sessionId,
+						SessionId = model.Message,
 						Token = tokens.jwtToken,
 						RefToken = tokens.refToken
 					}

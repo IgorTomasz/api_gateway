@@ -1,4 +1,5 @@
 ﻿using api_gateway.models;
+using api_gateway.models.AccountDTOs;
 using api_gateway.models.DTOs;
 using api_gateway.models.GameDTOs;
 using api_gateway.models.PaymentDTOs;
@@ -31,6 +32,7 @@ namespace api_gateway.services
 		public Task<HttpResponseModel> CheckIfGameAlreadyEnded(string endpoint, Guid gameSessionId);
 		public Task<ProcessGameStartResponse> ProcessGameStart(string endpoint, ProcessGameRequestMicroservice request);
 		public Task<HttpResponseModel> UpdateGames(string endpoint, AdminGameUpdate request);
+		public Task<HttpResponseModel> UpdateSessionOnRefreshToken(string endpoint, UpdateSessionWithRefTokenRequestMicroservice request);
 	}
 	public class GatewayService : IGatewayService
 	{
@@ -86,6 +88,11 @@ namespace api_gateway.services
 		public async Task<UserProfileResponse> GetUserProfile(string endpoint, Guid userId)
 		{
 			return await _accountService.GetUserProfile(endpoint, userId);
+		}
+		
+		public async Task<HttpResponseModel> UpdateSessionOnRefreshToken(string endpoint, UpdateSessionWithRefTokenRequestMicroservice request)
+		{
+			return await _accountService.UpdateSessionOnRefreshToken(endpoint, request);
 		}
 
 		public async Task<List<UserResponse>> GetAllUsers(string endpoint)

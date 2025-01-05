@@ -1,4 +1,5 @@
 ﻿using api_gateway.models;
+using api_gateway.models.AccountDTOs;
 using api_gateway.models.DTOs;
 using System.Text.Json;
 
@@ -13,6 +14,7 @@ namespace api_gateway.services
 		public Task<List<UserResponse>> GetAllUsers(string endpoint);
 		public Task<HttpResponseModel> GetUserInfo(string endpoint, Guid sessionId);
 		public Task<HttpResponseModel> ChangeUserPassword(string endpoint, ChangeUserPasswordUserMicroservice request);
+		public Task<HttpResponseModel> UpdateSessionOnRefreshToken(string endpoint, UpdateSessionWithRefTokenRequestMicroservice request);
 
 		public Task<HttpResponseModel> GetUserRefToken(string endpoint, UserRefreshTokenRequestMicroservice request);
 	}
@@ -86,6 +88,14 @@ namespace api_gateway.services
 		public async Task<HttpResponseModel> ChangeUserPassword(string endpoint, ChangeUserPasswordUserMicroservice request)
 		{
 			var resp = await _httpClient.PatchAsJsonAsync(endpoint, request);
+			resp.EnsureSuccessStatusCode();
+			var content = await resp.Content.ReadAsStringAsync();
+			return JsonSerializer.Deserialize<HttpResponseModel>(content, _options);
+		}
+
+		public async Task<HttpResponseModel> UpdateSessionOnRefreshToken(string endpoint, UpdateSessionWithRefTokenRequestMicroservice request)
+		{
+			var resp = await _httpClient.PatchAsJsonAsync(endpoint,request);
 			resp.EnsureSuccessStatusCode();
 			var content = await resp.Content.ReadAsStringAsync();
 			return JsonSerializer.Deserialize<HttpResponseModel>(content, _options);
