@@ -430,7 +430,20 @@ namespace api_gateway.Controllers
 			return Ok(await _gatewayService.UpdateGames("adm/games/update",request));
 		}
 
-		
+		[Authorize(Roles = "Admin")]
+		[HttpGet("adm/games")]
+		public async Task<IActionResult> GetAllGamesAdmin()
+		{
+			var games = await _gatewayService.GetAllGamesAdmin("adm/games");
+
+			return Ok(new HttpResponseModel
+			{
+				Success = true,
+				Message = games.Games
+			});
+		}
+
+
 		[HttpGet("games")]
 		public async Task<IActionResult> GetAllGames()
 		{

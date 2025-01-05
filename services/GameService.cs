@@ -14,6 +14,7 @@ namespace api_gateway.services
 		public Task<HttpResponseModel> CheckIfGameAlreadyEnded(string endpoint, Guid gameSessionId);
 		public Task<ProcessGameStartResponse> ProcessGameStart(string endpoint, ProcessGameRequestMicroservice request);
 		public Task<HttpResponseModel> UpdateGames(string endpoint, AdminGameUpdate request);
+		public Task<GameResponse> GetAllGamesAdmin(string endpoint);
 	}
 	public class GameService : IGameService
 	{
@@ -32,6 +33,14 @@ namespace api_gateway.services
 		}
 
 		public async Task<GameResponse> GetAllGames(string endpoint)
+		{
+			var resp = await _httpClient.GetAsync(endpoint);
+			resp.EnsureSuccessStatusCode();
+			var content = await resp.Content.ReadAsStringAsync();
+			return JsonSerializer.Deserialize<GameResponse>(content, _options);
+		}
+
+		public async Task<GameResponse> GetAllGamesAdmin(string endpoint)
 		{
 			var resp = await _httpClient.GetAsync(endpoint);
 			resp.EnsureSuccessStatusCode();

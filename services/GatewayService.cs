@@ -33,6 +33,7 @@ namespace api_gateway.services
 		public Task<ProcessGameStartResponse> ProcessGameStart(string endpoint, ProcessGameRequestMicroservice request);
 		public Task<HttpResponseModel> UpdateGames(string endpoint, AdminGameUpdate request);
 		public Task<HttpResponseModel> UpdateSessionOnRefreshToken(string endpoint, UpdateSessionWithRefTokenRequestMicroservice request);
+		public Task<GameResponse> GetAllGamesAdmin(string endpoint);
 	}
 	public class GatewayService : IGatewayService
 	{
@@ -123,6 +124,11 @@ namespace api_gateway.services
 		public async Task<GameResponse> GetAllGamesByCategory(string endpoint, GameCategory category)
 		{
 			return await _gameService.GetAllGamesByCategory(endpoint, category);
+		}
+
+		public async Task<GameResponse> GetAllGamesAdmin(string endpoint)
+		{
+			return await _gameService.GetAllGamesAdmin(endpoint);
 		}
 
 		public async Task<ProcessGameResponse> ProcessGame(string endpoint, ProcessGameRequestMicroservice request)
