@@ -74,7 +74,7 @@ namespace api_gateway.services
 
 		public async Task<HttpResponseModel> UpdateGames(string endpoint, AdminGameUpdate request)
 		{
-			var resp = await _httpClient.PostAsJsonAsync(endpoint, request);
+			var resp = await _httpClient.PutAsJsonAsync(endpoint, request);
 			resp.EnsureSuccessStatusCode();
 			var content = await resp.Content.ReadAsStringAsync();
 			return JsonSerializer.Deserialize<HttpResponseModel>(content, _options);
