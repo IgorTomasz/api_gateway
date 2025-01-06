@@ -7,7 +7,7 @@
 
 	public class GameActive
 	{
-		public string Id { get; set; }
+		public int GameId { get; set; }
 		public bool IsActive { get; set; }
 	}
 }
