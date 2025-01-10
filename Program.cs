@@ -4,6 +4,10 @@ using api_gateway.modules;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using api_gateway.models.GameDTOs;
+using api_gateway.models.PaymentDTOs;
+using api_gateway.models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace api_gateway
 {
@@ -14,10 +18,8 @@ namespace api_gateway
             var allowFrontend = "_allowFrontend";
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-
             builder.Services.AddControllers();
-			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 			builder.Services.AddScoped<ILogService, LogService>();
 			builder.Services.AddScoped<IPaymentService, PaymentService>();
             builder.Services.AddScoped<IAccountService, AccountService>();
@@ -56,14 +58,12 @@ namespace api_gateway
                                       policy.WithOrigins("http://localhost:3000","http://localhost:8085", "http://frontend")
                                       .AllowAnyHeader()
                                       .AllowAnyMethod();
-
                                   });
             });
 
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
