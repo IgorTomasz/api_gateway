@@ -19,15 +19,6 @@ Serwis jest jednym z czterech mikroserwisów tworzących kompletny system:
 
 ## 🔒 Zabezpieczenia
 
-### Poziom mikroserwisu
-1. **IP Whitelist**
-   - Filtrowanie requestów na podstawie dozwolonych adresów IP
-   - Konfiguracja w pliku appsettings.json
-
-2. **Custom Header Validation**
-   - Walidacja specjalnego nagłówka w każdym żądaniu
-   - Wartość nagłówka porównywana z konfiguracją w appsettings.json
-
 ### Poziom autoryzacji
 1. **JWT Token**
    - Wymagany dla zabezpieczonych endpointów
