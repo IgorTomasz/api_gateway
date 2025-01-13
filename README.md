@@ -243,7 +243,7 @@ public class HttpResponseModel
 git clone https://github.com/IgorTomasz/api-gateway.git
 
 # Przejdź do katalogu projektu
-cd api-gateway
+cd api_gateway
 
 # Zbuduj i uruchom kontenery
 docker-compose up --build
